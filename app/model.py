@@ -1,5 +1,5 @@
 from collections import UserDict, UserList
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import datetime
 
 import app.validation as validation
@@ -9,6 +9,11 @@ class Contact:
     name: str
     phone: str
     birthday: datetime.date
+
+    def __setattr__(self, prop, val):
+        if prop == "phone":
+            validation.validate_phone(val)
+        super().__setattr__(prop, val)
 
 
 class AddressBook(UserDict[str, Contact]):
