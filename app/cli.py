@@ -1,66 +1,52 @@
-from app.model import AddressBook, Record
-from app.validation import args_num, input_error
+from app.model import AddressBook
+from app.decorators import args_len, handle_errors
 
-book = AddressBook()
+data = AddressBook()
 
-
-def parse_input(user_input: str) -> tuple[str, list[str]]:
-    cmd, *args = user_input.strip().lower().split()
-    return cmd, args
-
-
-@args_num(2)
-@input_error
-def add_contact(*args):
+@args_len(2)
+@handle_errors
+def add(*args):
     name, phone = args
+    data.add_contact(name, phone)
+    print(f"Added {name} with phone number {phone}")
 
-    if name not in book:
-        book.add_record(Record(name))
-   
-    book[name].add_phone(phone)
 
-    print("Contact added")
-
-@args_num(2)
-@input_error
-def change_contact(*args):
+@args_len(2)
+@handle_errors
+def change(*args):
     name, phone = args
-    
-    record = book[name]
-
-    record.clear()
-    record.add_phone(phone)
-
-    print("Contact changed")
+    data.change_contact(name, phone=phone)
+    print(f"Changed {name} phone to {phone}")
 
 
-@args_num(1)
-@input_error
-def show_contact(name):
-    record = book[name]
-    print(record)
+@args_len(1)
+@handle_errors
+def phone(name):
+    print(data[name].phone)
 
 
-def show_all():
-    if len(book) == 0:
+
+@handle_errors
+def all():
+    if len(data) == 0:
         print("The address book is empty")
         return
-    for record in book.values():
-        print(record)
+    for name, contact in data.items():
+        print(f"{name}: {contact.phone}")
 
 commands = {
     "hello": lambda: print("How can I help you?"),
-    "add": add_contact,
-    "change": change_contact,
-    "phone": show_contact,
-    "all": show_all,
+    "add": add,
+    "change": change,
+    "phone": phone,
+    "all": all,
 }
 
 def start():
     print("Welcome to the assistant bot!")
     while True:
         user_input = input("Enter a command [hello,add,change,phone,all,exit]: ")
-        command, args = parse_input(user_input)
+        command, args = parse(user_input)
 
         if command == "exit":
             print("Good bye!")
@@ -70,3 +56,7 @@ def start():
             commands[command](*args)
         else:
             print("Invalid command")
+
+def parse(input: str) -> tuple[str, list[str]]:
+    cmd, *args = input.strip().lower().split()
+    return cmd, args
